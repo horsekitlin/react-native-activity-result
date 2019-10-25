@@ -4,6 +4,7 @@
 package com.microsoft;
 
 import android.app.Activity;
+import android.net.Uri;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.util.SparseArray;
@@ -69,6 +70,10 @@ public class ActivityResultModule extends ReactContextBaseJavaModule implements 
 
   @ReactMethod
   public void startActivityForResult(int requestCode, String action, ReadableMap data, Promise promise) {
+    // Activity activity = getReactApplicationContext().getCurrentActivity();
+    // Intent intent = new Intent(Intent.ACTION_VIEW,
+    //         Uri.parse("stream://app.velocitylight.net:3000/tools/?STATUS_DATA=testdata"));
+    // activity.startActivity(intent);
       Activity activity = getReactApplicationContext().getCurrentActivity();
       Intent intent = new Intent(action);
       intent.putExtras(Arguments.toBundle(data));
@@ -99,6 +104,16 @@ public class ActivityResultModule extends ReactContextBaseJavaModule implements 
       intent.putExtras(Arguments.toBundle(map));
       activity.setResult(result, intent);
       activity.finish();
+  }
+
+  @ReactMethod
+  public String screenshotResult() {
+    Activity activity = getReactApplicationContext().getCurrentActivity();
+    Intent intent = new Intent();
+    String data1 = intent.getStringExtra("data1");
+    String name = intent.getStringExtra("name");
+    String day = intent.getStringExtra("day");
+    return data1 + name + day;
   }
 
   @Override
