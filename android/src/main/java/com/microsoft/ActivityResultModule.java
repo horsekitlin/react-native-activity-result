@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.util.SparseArray;
+import android.util.Log;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
@@ -107,13 +108,8 @@ public class ActivityResultModule extends ReactContextBaseJavaModule implements 
   }
 
   @ReactMethod
-  public String screenshotResult() {
-    Activity activity = getReactApplicationContext().getCurrentActivity();
-    Intent intent = new Intent();
-    String data1 = intent.getStringExtra("data1");
-    String name = intent.getStringExtra("name");
-    String day = intent.getStringExtra("day");
-    return data1 + name + day;
+  public void screenshotResult(Promise promise) {
+    mPromises.put(123, promise);
   }
 
   @Override
@@ -136,6 +132,8 @@ public class ActivityResultModule extends ReactContextBaseJavaModule implements 
 
   @Override
   public void onNewIntent(Intent intent) {
-      /* Do nothing */
+    String result = intent.getStringExtra("result");
+    Promise promise = mPromises.get(123);
+    promise.resolve(result);
   }
 }
