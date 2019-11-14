@@ -5,6 +5,8 @@ package com.microsoft;
 
 import android.app.Activity;
 import android.net.Uri;
+import android.os.Bundle;
+import java.util.Set;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.util.SparseArray;
@@ -31,80 +33,90 @@ public class ActivityResultModule extends ReactContextBaseJavaModule implements 
   final SparseArray<Promise> mPromises;
 
   public ActivityResultModule(ReactApplicationContext reactContext) {
-      super(reactContext);
-      mPromises = new SparseArray<>();
+    super(reactContext);
+    mPromises = new SparseArray<>();
   }
 
   @Override
   public String getName() {
-      return "ActivityResult";
+    return "ActivityResult";
   }
 
   @Nullable
   @Override
   public Map<String, Object> getConstants() {
-      HashMap<String, Object> constants = new HashMap<>();
-      constants.put("OK", Activity.RESULT_OK);
-      constants.put("CANCELED", Activity.RESULT_CANCELED);
-      return constants;
+    HashMap<String, Object> constants = new HashMap<>();
+    constants.put("OK", Activity.RESULT_OK);
+    constants.put("CANCELED", Activity.RESULT_CANCELED);
+    return constants;
   }
 
   @Override
   public void initialize() {
-      super.initialize();
-      getReactApplicationContext().addActivityEventListener(this);
+    super.initialize();
+    getReactApplicationContext().addActivityEventListener(this);
   }
 
   @Override
   public void onCatalystInstanceDestroy() {
-      super.onCatalystInstanceDestroy();
-      getReactApplicationContext().removeActivityEventListener(this);
+    super.onCatalystInstanceDestroy();
+    getReactApplicationContext().removeActivityEventListener(this);
   }
 
   @ReactMethod
   public void startActivity(String action, ReadableMap data) {
-      Activity activity = getReactApplicationContext().getCurrentActivity();
-      Intent intent = new Intent(action);
-      intent.putExtras(Arguments.toBundle(data));
-      activity.startActivity(intent);
+    Activity activity = getReactApplicationContext().getCurrentActivity();
+    Intent intent = new Intent(action);
+    intent.putExtras(Arguments.toBundle(data));
+    activity.startActivity(intent);
   }
 
   @ReactMethod
-  public void startActivityForResult(int requestCode, String action, ReadableMap data, Promise promise) {
+  public void startActivityForResult(int requestCode, String action, String uri, ReadableMap data, Promise promise) {
     // Activity activity = getReactApplicationContext().getCurrentActivity();
     // Intent intent = new Intent(Intent.ACTION_VIEW,
-    //         Uri.parse("stream://app.velocitylight.net:3000/tools/?STATUS_DATA=testdata"));
+    // Uri.parse("stream://app.velocitylight.net:3000/tools/?STATUS_DATA=testdata"));
     // activity.startActivity(intent);
-      Activity activity = getReactApplicationContext().getCurrentActivity();
-      Intent intent = new Intent(action);
-      intent.putExtras(Arguments.toBundle(data));
-      activity.startActivityForResult(intent, requestCode);
-      mPromises.put(requestCode, promise);
+    Activity activity = getReactApplicationContext().getCurrentActivity();
+    // Intent intent = new Intent(action);
+    Intent intent = new Intent(action);
+    Bundle bundle = Arguments.toBundle(data);
+    // String url = "stream://app.velocitylight.net:3000/tools?";
+    Set<String> keyList = bundle.keySet();
+    for (String key : keyList) {
+      String value = bundle.get(key).toString();
+      uri += key + "=" + value + "&";
+    }
+    intent.setData(Uri.parse(uri));
+    intent.putExtras(Arguments.toBundle(data));
+    activity.startActivityForResult(intent, requestCode);
+    mPromises.put(requestCode, promise);
   }
 
   @ReactMethod
-  public void resolveActivity(String action, Promise promise) {
-      Activity activity = getReactApplicationContext().getCurrentActivity();
-      Intent intent = new Intent(action, Uri.parse("stream://app.velocitylight.net:3000/tools"));
-      ComponentName componentName = intent.resolveActivity(activity.getPackageManager());
-      if (componentName == null) {
-          promise.resolve(null);
-          return;
-      }
+  public void resolveActivity(String action, String uri, Promise promise) {
+    Activity activity = getReactApplicationContext().getCurrentActivity();
+    // Intent intent = new Intent(action);
+    Intent intent = new Intent(action, Uri.parse(uri));
+    ComponentName componentName = intent.resolveActivity(activity.getPackageManager());
+    if (componentName == null) {
+      promise.resolve(null);
+      return;
+    }
 
-      WritableMap map = new WritableNativeMap();
-      map.putString("class", componentName.getClassName());
-      map.putString("package", componentName.getPackageName());
-      promise.resolve(map);
+    WritableMap map = new WritableNativeMap();
+    map.putString("class", componentName.getClassName());
+    map.putString("package", componentName.getPackageName());
+    promise.resolve(map);
   }
 
   @ReactMethod
   public void finish(int result, String action, ReadableMap map) {
-      Activity activity = getReactApplicationContext().getCurrentActivity();
-      Intent intent = new Intent(action);
-      intent.putExtras(Arguments.toBundle(map));
-      activity.setResult(result, intent);
-      activity.finish();
+    Activity activity = getReactApplicationContext().getCurrentActivity();
+    Intent intent = new Intent(action);
+    intent.putExtras(Arguments.toBundle(map));
+    activity.setResult(result, intent);
+    activity.finish();
   }
 
   @ReactMethod
@@ -114,20 +126,20 @@ public class ActivityResultModule extends ReactContextBaseJavaModule implements 
 
   @Override
   public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
-      Promise promise = mPromises.get(requestCode);
-      if (resultCode != Activity.RESULT_OK){
-        promise.resolve(null);
-        return;
+    Promise promise = mPromises.get(requestCode);
+    if (resultCode != Activity.RESULT_OK) {
+      promise.resolve(null);
+      return;
+    }
+
+    if (promise != null) {
+      WritableMap result = new WritableNativeMap();
+      result.putInt("resultCode", resultCode);
+      if (data != null) {
+        result.putMap("data", Arguments.makeNativeMap(data.getExtras()));
       }
-      
-      if (promise != null) {
-          WritableMap result = new WritableNativeMap();
-          result.putInt("resultCode", resultCode);
-          if (data != null) {
-            result.putMap("data", Arguments.makeNativeMap(data.getExtras()));
-          }
-          promise.resolve(result);
-      }
+      promise.resolve(result);
+    }
   }
 
   @Override
