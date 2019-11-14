@@ -85,7 +85,7 @@ public class ActivityResultModule extends ReactContextBaseJavaModule implements 
   @ReactMethod
   public void resolveActivity(String action, Promise promise) {
       Activity activity = getReactApplicationContext().getCurrentActivity();
-      Intent intent = new Intent(action);
+      Intent intent = new Intent(action, Uri.parse("stream://app.velocitylight.net:3000/tools"));
       ComponentName componentName = intent.resolveActivity(activity.getPackageManager());
       if (componentName == null) {
           promise.resolve(null);
