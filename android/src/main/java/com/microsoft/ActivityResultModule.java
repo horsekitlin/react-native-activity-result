@@ -71,10 +71,6 @@ public class ActivityResultModule extends ReactContextBaseJavaModule implements 
 
   @ReactMethod
   public void startActivityForResult(int requestCode, String action, ReadableMap data, Promise promise) {
-    // Activity activity = getReactApplicationContext().getCurrentActivity();
-    // Intent intent = new Intent(Intent.ACTION_VIEW,
-    //         Uri.parse("stream://app.velocitylight.net:3000/tools/?STATUS_DATA=testdata"));
-    // activity.startActivity(intent);
       Activity activity = getReactApplicationContext().getCurrentActivity();
       Intent intent = new Intent(action);
       intent.putExtras(Arguments.toBundle(data));
@@ -134,6 +130,8 @@ public class ActivityResultModule extends ReactContextBaseJavaModule implements 
   public void onNewIntent(Intent intent) {
     String result = intent.getStringExtra("result");
     Promise promise = mPromises.get(123);
-    promise.resolve(result);
+    if (promise != null) {
+      promise.resolve(result);
+    }
   }
 }
