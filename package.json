@@ -1,6 +1,6 @@
 {
   "name": "rn-activity-result",
-  "version": "0.1.0-rc.4",
+  "version": "0.1.0-rc.5",
   "description": "React Native modules for starting and finishing activities on Android.",
   "main": "index.js",
   "repository": {
